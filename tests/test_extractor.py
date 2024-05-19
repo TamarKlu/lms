@@ -26,6 +26,7 @@ class TestExtractor:
     PY_NO_EXERCISE = 'noexercise.py'
     ZIP_FILES = ('Upload_1.zip', 'zipfiletest.zip')
     ZIP_BOMB_FILE = 'zipbomb.zip'
+    ZIP_BAD_FILE = 'Upload_5.zip'
 
     def setup_method(self):
         self.ipynb_file = self.ipynb_file()
@@ -42,6 +43,7 @@ class TestExtractor:
             (self.PY_NO_EXERCISE,),
         ))
         self.zipfile_file = next(self.zip_files((self.IGNORE_FILES_ZIP_NAME,)))
+        self.zipfile_file_bed = next(self.zip_files((self.ZIP_BAD_FILE,)))
         self.ipynb_storage = FileStorage(self.ipynb_file)
         self.image_storage = FileStorage(self.image_file)
         self.image_no_exercise_storage = FileStorage(
@@ -56,6 +58,9 @@ class TestExtractor:
         )
         self.zipfile_storage = self.create_zipfile_storage(
             self.zipfile_file, self.IGNORE_FILES_ZIP_NAME,
+        )
+        self.zipfile_bad_storage = self.create_zipfile_storage(
+            self.zipfile_file_bed, self.ZIP_BAD_FILE,
         )
         self.zipfiles_extractor_files = list(self.zip_files(self.ZIP_FILES))
         self.zipfiles_extractors_bytes_io = list(self.get_bytes_io_zip_files(
@@ -152,7 +157,13 @@ class TestExtractor:
             list(extractor.Extractor(self.pyfile_no_exercise_storage))
         assert e_info.type is BadUploadFile
         assert e_info.value.args[0] == "Can't resolve exercise id."
-
+    
+    
+    def test_bad_zip(self):
+        zipfilearchive.Ziparchive(to_extract=self.zipfile_bad_storage)
+        assert zipfilearchive.Ziparchive.is_zipfile == False   
+    
+    
     def test_zip_ignore_files(self):
         result = zipfilearchive.Ziparchive(to_extract=self.zipfile_storage)
         exercises = list(result.get_exercises())[0][1]
